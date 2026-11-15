@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FAF8F5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="마음챙김">
+<meta name="description" content="하루 한 문장, 한 번의 호흡. 마음챙김과 동기부여를 위한 작은 웹앱.">
+<title>마음챙김 — 하루 한 문장</title>
+<style>
+  :root {
+    --bg: #FAF8F5;
+    --surface: #FFFDFA;
+    --ink: #1E242B;
+    --ink-soft: #4C5560;
+    --muted: #6E747A;
+    --line: #E6E1D8;
+    --accent: #4A6B5D;
+    --accent-dark: #3F5C50;
+    --accent-soft: #EAF0EC;
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html { background: #F5F1EA; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Pretendard", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection { background: var(--accent-soft); }
+
+  button { font-family: inherit; }
+
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 20px calc(88px + env(safe-area-inset-bottom, 0px));
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* ── header ─────────────────────────────── */
+  .top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: calc(20px + env(safe-area-inset-top, 0px)) 0 2px;
+  }
+  .brand {
+    font-size: 0.94rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  .today-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    letter-spacing: 0;
+  }
+
+  /* ── views ──────────────────────────────── */
+  .view { display: none; }
+  .view.is-active { display: block; animation: viewIn 0.22s ease both; }
+  @keyframes viewIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .view-head { padding-top: 18px; }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 1.42rem;
+    line-height: 1.35;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+  .lede {
+    margin: 0 0 18px;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+    letter-spacing: -0.005em;
+  }
+
+  /* ── author filters ─────────────────────── */
+  .filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 0 6px;
+    margin-bottom: 14px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+  .pill {
+    flex: 0 0 auto;
+    padding: 7px 13px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 0.81rem;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  }
+  .pill:hover { border-color: #CFC8BC; }
+  .pill[aria-selected="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #FFFFFF;
+    font-weight: 600;
+  }
+
+  /* ── quote card ─────────────────────────── */
+  .quote-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px 22px 18px;
+  }
+  .quote-author {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.73rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+  }
+  .quote-author::before {
+    content: "";
+    display: block;
+    width: 14px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.7;
+  }
+  .quote-text {
+    margin: 14px 0 0;
+    font-size: 1.14rem;
+    line-height: 1.8;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    min-height: 4em;
+  }
+  .quote-source {
+    margin-top: 12px;
+    font-size: 0.745rem;
+    color: var(--muted);
+    letter-spacing: 0;
+  }
+  .reflect {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+  .reflect-label {
+    flex: 0 0 auto;
+    height: fit-content;
+    margin-top: 1px;
+    padding: 1px 6px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .reflect p {
+    margin: 0;
+    font-size: 0.855rem;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  .quote-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  /* ── buttons ────────────────────────────── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    font-size: 0.85rem;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.1s ease;
+  }
+  .btn:hover { border-color: #CFC8BC; }
+  .btn:active { transform: scale(0.985); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.is-on {
+    background: var(--accent-soft);
+    border-color: rgba(74, 107, 93, 0.38);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .btn.is-on:hover { color: var(--accent); border-color: rgba(74, 107, 93, 0.38); }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #FFFFFF;
+    font-weight: 600;
+  }
+  .btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+  .btn:disabled { opacity: 0.45; cursor: default; transform: none; }
+  .btn .ic { width: 15px; height: 15px; stroke-width: 1.7; }
+  .btn-sm { padding: 10px 15px; font-size: 0.84rem; }
+
+  .btn:focus-visible,
+  .pill:focus-visible,
+  .mood:focus-visible,
+  .seg:focus-visible,
+  .tab:focus-visible,
+  .icon-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .counter {
+    margin: 10px 2px 0;
+    text-align: right;
+    font-size: 0.735rem;
+    color: var(--muted);
+    letter-spacing: 0;
+  }
+
+  /* ── breathing ──────────────────────────── */
+  .breath-stage {
+    position: relative;
+    width: min(74vw, 286px);
+    aspect-ratio: 1 / 1;
+    margin: 22px auto 0;
+    display: grid;
+    place-items: center;
+  }
+  .ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    overflow: visible;
+  }
+  .ring-track {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 3;
+  }
+  .ring-bar {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.12s linear;
+  }
+  .orb {
+    width: 78%;
+    height: 78%;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px rgba(74, 107, 93, 0.14);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    transform: scale(0.66);
+    will-change: transform;
+  }
+  .phase {
+    font-size: 0.83rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+  }
+  .seconds {
+    font-size: 2.55rem;
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .seconds-unit {
+    margin-left: 1px;
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0;
+  }
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+    font-size: 0.755rem;
+    color: var(--muted);
+    letter-spacing: -0.005em;
+  }
+  .legend b { color: var(--ink-soft); font-weight: 600; }
+  .breath-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 22px;
+  }
+  .breath-actions .btn-primary { min-width: 126px; }
+  .breath-hint {
+    margin: 16px 0 0;
+    text-align: center;
+    font-size: 0.775rem;
+    line-height: 1.6;
+    color: var(--muted);
+    min-height: 2.6em;
+  }
+
+  /* ── notes ──────────────────────────────── */
+  .note-form {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  .moods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .mood {
+    padding: 6px 11px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 0.79rem;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  }
+  .mood:hover { border-color: #CFC8BC; }
+  .mood[aria-checked="true"] {
+    background: var(--accent-soft);
+    border-color: rgba(74, 107, 93, 0.4);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .note-row { display: flex; gap: 8px; }
+  .note-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 11px 13px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+    transition: border-color 0.16s ease, background 0.16s ease;
+  }
+  .note-input::placeholder { color: #A9A49B; }
+  .note-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+
+  .segmented {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    padding: 4px;
+    background: #F1EDE6;
+    border-radius: 12px;
+  }
+  .seg {
+    flex: 1 1 0;
+    padding: 8px 4px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 0.83rem;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+  }
+  .seg .n {
+    margin-left: 3px;
+    font-size: 0.745rem;
+    font-weight: 500;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .seg.is-active {
+    background: var(--surface);
+    color: var(--ink);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(30, 36, 43, 0.06);
+  }
+
+  .pane { display: none; }
+  .pane.is-active { display: block; }
+
+  .note-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px 2px;
+    border-bottom: 1px solid var(--line);
+  }
+  .note-item:first-child { padding-top: 4px; }
+  .note-body { flex: 1 1 auto; min-width: 0; }
+  .note-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.735rem;
+    color: var(--muted);
+    letter-spacing: 0;
+  }
+  .note-mood { color: var(--accent); font-weight: 600; }
+  .note-mood::after {
+    content: "·";
+    margin-left: 8px;
+    color: #C6C1B8;
+    font-weight: 400;
+  }
+  .note-text {
+    margin: 5px 0 0;
+    font-size: 0.94rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  .icon-btn {
+    flex: 0 0 auto;
+    margin: -4px -2px 0 0;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #B7B1A7;
+    font-size: 1.02rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .icon-btn:hover { color: #8A5B4E; background: #F5EFE9; }
+
+  .saved-item {
+    margin-bottom: 10px;
+    padding: 14px 15px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+  .saved-item .q {
+    margin: 0;
+    font-size: 0.925rem;
+    line-height: 1.68;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  .saved-by {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 0.735rem;
+    color: var(--muted);
+  }
+  .saved-by .who { color: var(--accent); font-weight: 600; letter-spacing: 0.03em; }
+  .saved-by button {
+    padding: 2px 5px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: #B7B1A7;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+  .saved-by button:hover { color: #8A5B4E; background: #F5EFE9; }
+
+  .empty {
+    padding: 34px 18px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    text-align: center;
+    font-size: 0.85rem;
+    line-height: 1.75;
+    color: var(--muted);
+    word-break: keep-all;
+  }
+
+  /* ── bottom nav ─────────────────────────── */
+  .tabbar {
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    z-index: 20;
+    width: 100%;
+    max-width: 480px;
+    transform: translateX(-50%);
+    display: flex;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+    background: rgba(250, 248, 245, 0.94);
+    -webkit-backdrop-filter: saturate(160%) blur(12px);
+    backdrop-filter: saturate(160%) blur(12px);
+    border-top: 1px solid var(--line);
+  }
+  .tab {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0 5px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.7rem;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: color 0.16s ease;
+  }
+  .tab svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .tab.is-active { color: var(--accent); font-weight: 600; }
+  .tab.is-active svg { stroke-width: 1.9; }
+
+  /* ── desktop ────────────────────────────── */
+  @media (min-width: 720px) {
+    .app {
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      background: var(--bg);
+    }
+    .tabbar {
+      border-left: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .view.is-active { animation: none; }
+    .ring-bar { transition: none; }
+    .btn, .pill, .mood { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">마음챙김</div>
+    <div class="today-label" id="topDate"></div>
+  </header>
+
+  <main>
+    <!-- ── 오늘 ─────────────────────────── -->
+    <section class="view is-active" id="view-today" role="tabpanel" aria-labelledby="tab-today">
+      <div class="view-head">
+        <h1>오늘의 문장</h1>
+        <p class="lede">읽고, 한 번 숨 고르고, 한 줄 남기기.</p>
+      </div>
+
+      <div class="filters" id="filters" role="tablist" aria-label="작가 선택"></div>
+
+      <article class="quote-card">
+        <div class="quote-author" id="quoteAuthor">니체</div>
+        <blockquote class="quote-text" id="quoteText"></blockquote>
+        <div class="quote-source" id="quoteSource"></div>
+        <div class="reflect">
+          <span class="reflect-label">생각</span>
+          <p id="quotePrompt"></p>
+        </div>
+        <div class="quote-actions">
+          <button type="button" class="btn btn-ghost" id="btnSave" aria-pressed="false">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 4.5h12a1 1 0 0 1 1 1V20l-7-4.5L5 20V5.5a1 1 0 0 1 1-1z"></path>
+            </svg>
+            <span id="btnSaveLabel">담기</span>
+          </button>
+          <button type="button" class="btn btn-ghost" id="btnNext">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 9h11l-3-3"></path>
+              <path d="M20 15H9l3 3"></path>
+            </svg>
+            다른 문장
+          </button>
+        </div>
+      </article>
+      <div class="counter" id="quoteCounter"></div>
+    </section>
+
+    <!-- ── 호흡 ─────────────────────────── -->
+    <section class="view" id="view-breath" role="tabpanel" aria-labelledby="tab-breath">
+      <div class="view-head">
+        <h1>1분 호흡</h1>
+        <p class="lede">4초 들이마시고, 4초 멈추고, 6초 내쉰다.</p>
+      </div>
+
+      <div class="breath-stage">
+        <svg class="ring" viewBox="0 0 240 240" aria-hidden="true">
+          <circle class="ring-track" cx="120" cy="120" r="112"></circle>
+          <circle class="ring-bar" id="ringBar" cx="120" cy="120" r="112"></circle>
+        </svg>
+        <div class="orb" id="orb">
+          <span class="phase" id="phaseLabel">준비</span>
+          <span class="seconds"><span id="seconds">60</span><span class="seconds-unit">초</span></span>
+        </div>
+      </div>
+
+      <div class="breath-actions">
+        <button type="button" class="btn btn-primary" id="btnBreath">시작</button>
+        <button type="button" class="btn btn-ghost" id="btnBreathReset">초기화</button>
+      </div>
+
+      <p class="breath-hint" id="breathHint">시작을 누르면 60초 동안 안내합니다.</p>
+
+      <div class="legend">
+        <span>들이마시기 <b>4</b></span>
+        <span>멈추기 <b>4</b></span>
+        <span>내쉬기 <b>6</b></span>
+      </div>
+    </section>
+
+    <!-- ── 기록 ─────────────────────────── -->
+    <section class="view" id="view-record" role="tabpanel" aria-labelledby="tab-record">
+      <div class="view-head">
+        <h1>기록</h1>
+        <p class="lede">오늘 마음에 남은 것 한 줄.</p>
+      </div>
+
+      <form class="note-form" id="noteForm">
+        <div class="moods" id="moods" role="radiogroup" aria-label="지금 마음"></div>
+        <div class="note-row">
+          <input class="note-input" id="noteInput" type="text" maxlength="140" autocomplete="off" enterkeyhint="done"
+                 placeholder="한 줄만 적어두기" aria-label="한 줄 기록">
+          <button type="submit" class="btn btn-primary btn-sm">저장</button>
+        </div>
+      </form>
+
+      <div class="segmented" role="tablist" aria-label="기록 보기">
+        <button type="button" class="seg is-active" id="segNotes" role="tab" aria-selected="true" data-pane="notes">
+          내 기록 <span class="n" id="noteCount">0</span>
+        </button>
+        <button type="button" class="seg" id="segSaved" role="tab" aria-selected="false" data-pane="saved">
+          담은 문장 <span class="n" id="savedCount">0</span>
+        </button>
+      </div>
+
+      <div class="pane is-active" id="paneNotes"></div>
+      <div class="pane" id="paneSaved"></div>
+    </section>
+  </main>
+</div>
+
+<nav class="tabbar" role="tablist" aria-label="화면 이동">
+  <button type="button" class="tab is-active" id="tab-today" data-view="today" role="tab" aria-selected="true" aria-controls="view-today">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2"></circle>
+      <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"></path>
+    </svg>
+    <span>오늘</span>
+  </button>
+  <button type="button" class="tab" id="tab-breath" data-view="breath" role="tab" aria-selected="false" aria-controls="view-breath">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"></circle>
+      <circle cx="12" cy="12" r="4"></circle>
+    </svg>
+    <span>호흡</span>
+  </button>
+  <button type="button" class="tab" id="tab-record" data-view="record" role="tab" aria-selected="false" aria-controls="view-record">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h10"></path>
+    </svg>
+    <span>기록</span>
+  </button>
+</nav>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ─────────────────────────────────────────
+     문장
+     출처를 확인한 문장만 담았습니다.
+     ───────────────────────────────────────── */
+  var QUOTES = [
+    { id: 'n1', author: '니체',
+      text: '나를 죽이지 못하는 것은 나를 더 강하게 만든다.',
+      source: '『우상의 황혼』 잠언과 화살 8',
+      prompt: '요즘 견디고 있는 일 하나. 견딘 다음에 남은 게 뭔지 생각해보기.' },
+
+    { id: 'b1', author: '법정스님',
+      text: '무소유란 아무것도 갖지 않는 것이 아니라 불필요한 것을 갖지 않는 것입니다.',
+      source: '『무소유』',
+      prompt: '책상 위, 가방 안. 하나만 덜어도 되는 것.' },
+
+    { id: 'p1', author: '박웅현',
+      text: '자존은 중심점을 안에 찍고 그것을 향해 나아가는 겁니다.',
+      source: '『여덟 단어』 자존',
+      prompt: '오늘 하루, 남의 기준으로 정한 선택이 하나 있었는지.' },
+
+    { id: 'm1', author: '보만스님',
+      text: '사람들은 너무 진지합니다. 세상이 진실하다고, 내 생각이 옳다고, ‘나’가 실제로 존재한다고 믿는 순간 진지해지고, 삶은 무거워집니다.',
+      source: '『나도 내 마음을 모를 때, 불교심리학』',
+      prompt: '오늘 유독 무겁게 붙잡은 생각 하나. 힘을 조금 빼보기.' },
+
+    { id: 'n2', author: '니체',
+      text: '괴물과 싸우는 사람은 그 과정에서 스스로 괴물이 되지 않도록 조심해야 한다. 그리고 오래 심연을 들여다보면, 심연도 그대를 들여다본다.',
+      source: '『선악의 저편』 146',
+      prompt: '요즘 마음에 걸려 오래 들여다보는 일. 그걸 보는 내 표정도 한번 살펴보기.' },
+
+    { id: 'b2', author: '법정스님',
+      text: '행복의 척도는 필요한 것을 얼마나 많이 가지고 있느냐가 아니라, 불필요한 것으로부터 얼마나 자유로워져 있느냐에 달려 있습니다.',
+      source: '1994년 춘천 강연',
+      prompt: '오늘 나를 붙잡고 있던 것 중, 없어도 됐던 것 하나.' },
+
+    { id: 'p2', author: '박웅현',
+      text: '본질이 무엇이냐에 따라 흔들림이 달라집니다.',
+      source: '『여덟 단어』 본질',
+      prompt: '지금 힘든 일의 본질을 한 문장으로 적어보면.' },
+
+    { id: 'm2', author: '보만스님',
+      text: '생각을 통제하려 들지 말고, 생각은 곧 사라진다는 사실을 믿고, 생각을 바라보는 자리에 서야 합니다.',
+      source: '『나도 내 마음을 모를 때, 불교심리학』 118쪽',
+      prompt: '지금 떠오르는 생각을 없애지 말고, 지나가는 걸 한 번 지켜보기.' },
+
+    { id: 'n3', author: '니체',
+      text: '춤추는 별을 낳으려면 자기 안에 혼돈을 지니고 있어야 한다.',
+      source: '『차라투스트라는 이렇게 말했다』 서설 5',
+      prompt: '정리되지 않은 채로 두고 있는 마음. 굳이 오늘 정리하지 않아도 되는지 물어보기.' },
+
+    { id: 'b3', author: '법정스님',
+      text: '하나가 필요할 때 둘을 가지려고 하지 마십시오. 둘을 갖게 되면 그 하나마저 잃어 버립니다.',
+      source: '1994년 춘천 강연',
+      prompt: '하나로 충분한데 자꾸 둘을 찾고 있는 게 있는지.' },
+
+    { id: 'p3', author: '박웅현',
+      text: '동의되지 않는 권위에 굴복하지 말고, 불합리한 돈의 힘에 복종하지 말자.',
+      source: '『여덟 단어』 권위',
+      prompt: '오늘 무심코 따른 권위, 그리고 내가 무심코 부린 권위.' },
+
+    { id: 'm3', author: '보만스님',
+      text: '정답을 찾는 것보다 더 중요한 것은 문제 자체를 올바로 보는 견해를 갖추는 일입니다.',
+      source: '『나도 내 마음을 모를 때, 불교심리학』 181쪽',
+      prompt: '답이 안 나오는 고민. 질문이 틀린 건 아닌지.' },
+
+    { id: 'n4', author: '니체',
+      text: '인간이 위대한 것은 그가 목적이 아니라 다리라는 데 있다.',
+      source: '『차라투스트라는 이렇게 말했다』 서설 4',
+      prompt: '지금 나는 어디서 어디로 건너가는 중인지, 한 줄로 적어보기.' },
+
+    { id: 'b4', author: '법정스님',
+      text: '소유물은 우리가 그것을 소유하는 이상으로 우리 자신을 소유해버립니다.',
+      source: '1994년 춘천 강연',
+      prompt: '내 물건 중 나를 붙잡고 있는 것. 팔거나 버릴 후보 하나.' },
+
+    { id: 'p4', author: '박웅현',
+      text: '의식을 누르고, 느낌을 올린다.',
+      source: '『문장과 순간』',
+      prompt: '지금 눈에 보이는 것 하나, 들리는 소리 하나.' },
+
+    { id: 'm4', author: '보만스님',
+      text: '사건을 있는 그대로 볼 수 있을 때, 삶은 단순해지고, 단순해진 만큼 가벼워진다.',
+      source: '『나도 내 마음을 모를 때, 불교심리학』',
+      prompt: '오늘 일 하나를, 의미를 빼고 사실만 적어보기.' },
+
+    { id: 'n5', author: '니체',
+      text: '네 양심이 말한다. 너는 네가 되어야 할 사람이 되어라.',
+      source: '『즐거운 학문』 270',
+      prompt: '오늘 하루, 누가 시켜서가 아니라 내가 고른 일이 있었는지.' },
+
+    { id: 'b5', author: '법정스님',
+      text: '우리가 선택한 맑은 가난은 혼탁한 부보다 훨씬 값지고 고귀한 것입니다.',
+      source: '『진짜 나를 찾아라』',
+      prompt: '돈을 쓰지 않고도 오늘 채워진 시간이 있었는지.' },
+
+    { id: 'p5', author: '박웅현',
+      text: '인생은 책이 아니다. 내가 채워나갈 공책이다.',
+      source: '『여덟 단어』 인생',
+      prompt: '오늘 공책에 한 줄 남긴다면 어떤 문장.' },
+
+    { id: 'm5', author: '보만스님',
+      text: '지금 이 자리에 깨어 있을 때 우리는 기억에서 자유로울 수 있습니다.',
+      source: '『나도 내 마음을 모를 때, 불교심리학』 76쪽',
+      prompt: '지금 여기 있는 것 세 가지. 발바닥, 숨, 소리.' }
+  ];
+
+  var AUTHORS = ['전체', '니체', '박웅현', '법정스님', '보만스님'];
+  var MOODS = ['고요함', '흔들림', '지침', '감사', '다짐'];
+
+  var KEY_NOTES = 'mindful.notes.v1';
+  var KEY_SAVED = 'mindful.saved.v1';
+
+  /* ─────────────────────────────────────────
+     저장소
+     ───────────────────────────────────────── */
+  function readStore(key, fallback) {
+    try {
+      var raw = window.localStorage.getItem(key);
+      if (!raw) return fallback;
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : fallback;
+    } catch (err) {
+      return fallback;
+    }
+  }
+
+  function writeStore(key, value) {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  var notes = readStore(KEY_NOTES, []).filter(function (n) {
+    return n && typeof n.text === 'string' && n.text;
+  });
+  var saved = readStore(KEY_SAVED, []).filter(function (s) {
+    return s && typeof s.id === 'string' && findQuote(s.id);
+  });
+
+  function findQuote(id) {
+    for (var i = 0; i < QUOTES.length; i++) {
+      if (QUOTES[i].id === id) return QUOTES[i];
+    }
+    return null;
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  /* ─────────────────────────────────────────
+     날짜
+     ───────────────────────────────────────── */
+  var WEEKDAYS = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+
+  function pad(num) {
+    return num < 10 ? '0' + num : '' + num;
+  }
+
+  function todayLabel(date) {
+    return (date.getMonth() + 1) + '월 ' + date.getDate() + '일 ' + WEEKDAYS[date.getDay()];
+  }
+
+  function dayKey(date) {
+    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
+  }
+
+  function stampLabel(iso) {
+    var when = new Date(iso);
+    if (isNaN(when.getTime())) return '';
+    var now = new Date();
+    var time = pad(when.getHours()) + ':' + pad(when.getMinutes());
+    if (dayKey(when) === dayKey(now)) return '오늘 ' + time;
+    var yesterday = new Date(now.getTime() - 86400000);
+    if (dayKey(when) === dayKey(yesterday)) return '어제 ' + time;
+    return (when.getMonth() + 1) + '월 ' + when.getDate() + '일 ' + time;
+  }
+
+  function dayOfYear(date) {
+    var start = new Date(date.getFullYear(), 0, 0);
+    return Math.floor((date.getTime() - start.getTime()) / 86400000);
+  }
+
+  document.getElementById('topDate').textContent = todayLabel(new Date());
+
+  /* ─────────────────────────────────────────
+     화면 전환
+     ───────────────────────────────────────── */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+
+  function showView(name) {
+    var views = document.querySelectorAll('.view');
+    for (var i = 0; i < views.length; i++) {
+      views[i].classList.toggle('is-active', views[i].id === 'view-' + name);
+    }
+    for (var j = 0; j < tabs.length; j++) {
+      var on = tabs[j].getAttribute('data-view') === name;
+      tabs[j].classList.toggle('is-active', on);
+      tabs[j].setAttribute('aria-selected', on ? 'true' : 'false');
+    }
+    window.scrollTo(0, 0);
+  }
+
+  for (var t = 0; t < tabs.length; t++) {
+    tabs[t].addEventListener('click', function () {
+      showView(this.getAttribute('data-view'));
+    });
+  }
+
+  /* ─────────────────────────────────────────
+     오늘의 문장
+     ───────────────────────────────────────── */
+  var filtersEl = document.getElementById('filters');
+  var authorEl = document.getElementById('quoteAuthor');
+  var textEl = document.getElementById('quoteText');
+  var sourceEl = document.getElementById('quoteSource');
+  var promptEl = document.getElementById('quotePrompt');
+  var counterEl = document.getElementById('quoteCounter');
+  var saveBtn = document.getElementById('btnSave');
+  var saveLabel = document.getElementById('btnSaveLabel');
+
+  var state = {
+    author: '전체',
+    index: dayOfYear(new Date()) % QUOTES.length
+  };
+
+  AUTHORS.forEach(function (name) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pill';
+    btn.setAttribute('role', 'tab');
+    btn.setAttribute('data-author', name);
+    btn.setAttribute('aria-selected', name === state.author ? 'true' : 'false');
+    btn.textContent = name;
+    btn.addEventListener('click', function () {
+      state.author = name;
+      var pills = filtersEl.querySelectorAll('.pill');
+      for (var i = 0; i < pills.length; i++) {
+        pills[i].setAttribute('aria-selected', pills[i].getAttribute('data-author') === name ? 'true' : 'false');
+      }
+      var group = filteredIndices();
+      if (group.indexOf(state.index) === -1) state.index = group[0];
+      renderQuote();
+    });
+    filtersEl.appendChild(btn);
+  });
+
+  function filteredIndices() {
+    var out = [];
+    for (var i = 0; i < QUOTES.length; i++) {
+      if (state.author === '전체' || QUOTES[i].author === state.author) out.push(i);
+    }
+    return out;
+  }
+
+  function isSaved(id) {
+    for (var i = 0; i < saved.length; i++) {
+      if (saved[i].id === id) return true;
+    }
+    return false;
+  }
+
+  function renderQuote() {
+    var quote = QUOTES[state.index];
+    if (!quote) return;
+    authorEl.textContent = quote.author;
+    textEl.textContent = quote.text;
+    sourceEl.textContent = quote.source;
+    promptEl.textContent = quote.prompt;
+
+    var group = filteredIndices();
+    counterEl.textContent = (group.indexOf(state.index) + 1) + ' / ' + group.length;
+
+    var on = isSaved(quote.id);
+    saveBtn.classList.toggle('is-on', on);
+    saveBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    saveLabel.textContent = on ? '담음' : '담기';
+  }
+
+  document.getElementById('btnNext').addEventListener('click', function () {
+    var group = filteredIndices();
+    if (group.length < 2) return;
+    var next = state.index;
+    while (next === state.index) {
+      next = group[Math.floor(Math.random() * group.length)];
+    }
+    state.index = next;
+    renderQuote();
+  });
+
+  saveBtn.addEventListener('click', function () {
+    var quote = QUOTES[state.index];
+    if (!quote) return;
+    if (isSaved(quote.id)) {
+      saved = saved.filter(function (s) { return s.id !== quote.id; });
+    } else {
+      saved.unshift({ id: quote.id, at: new Date().toISOString() });
+    }
+    writeStore(KEY_SAVED, saved);
+    renderQuote();
+    renderSaved();
+  });
+
+  /* ─────────────────────────────────────────
+     1분 호흡
+     ───────────────────────────────────────── */
+  var TOTAL = 60;
+  var BASE_SCALE = 0.66;
+  var CYCLE = [{ label: '들이마시기', dur: 4 }, { label: '멈추기', dur: 4 }, { label: '내쉬기', dur: 6 }];
+  var CYCLE_LEN = 14;
+  var RING_R = 112;
+  var RING_C = 2 * Math.PI * RING_R;
+
+  var orbEl = document.getElementById('orb');
+  var phaseEl = document.getElementById('phaseLabel');
+  var secondsEl = document.getElementById('seconds');
+  var ringEl = document.getElementById('ringBar');
+  var hintEl = document.getElementById('breathHint');
+  var breathBtn = document.getElementById('btnBreath');
+  var resetBtn = document.getElementById('btnBreathReset');
+
+  ringEl.style.strokeDasharray = RING_C.toFixed(2) + ' ' + RING_C.toFixed(2);
+
+  var breath = { state: 'idle', elapsed: 0, last: 0, raf: 0 };
+
+  function easeInOut(t) {
+    return 0.5 - 0.5 * Math.cos(Math.PI * t);
+  }
+
+  function paintBreath() {
+    var elapsed = Math.min(breath.elapsed, TOTAL);
+    var remaining = Math.max(0, TOTAL - elapsed);
+    var idle = breath.state === 'idle';
+    var done = elapsed >= TOTAL;
+
+    secondsEl.textContent = idle ? String(TOTAL) : String(Math.ceil(remaining));
+    ringEl.style.strokeDashoffset = (RING_C * (elapsed / TOTAL)).toFixed(2);
+
+    var scale = BASE_SCALE;
+    var label = '준비';
+
+    if (!idle && !done) {
+      var pos = elapsed % CYCLE_LEN;
+      if (pos < 4) {
+        label = CYCLE[0].label;
+        scale = BASE_SCALE + (1 - BASE_SCALE) * easeInOut(pos / 4);
+      } else if (pos < 8) {
+        label = CYCLE[1].label;
+        scale = 1;
+      } else {
+        label = CYCLE[2].label;
+        scale = 1 - (1 - BASE_SCALE) * easeInOut((pos - 8) / 6);
+      }
+    } else if (done) {
+      label = '다 했어요';
+      scale = BASE_SCALE;
+    }
+
+    phaseEl.textContent = label;
+    orbEl.style.transform = 'scale(' + scale.toFixed(4) + ')';
+
+    if (breath.state === 'running') {
+      hintEl.textContent = '어깨는 내려두고, 코로 쉬어보세요.';
+    } else if (breath.state === 'paused') {
+      hintEl.textContent = '잠시 멈춤. 이어서 하려면 시작을 누르세요.';
+    } else if (done) {
+      hintEl.textContent = '60초 끝. 한 번 더 하려면 다시 시작하세요.';
+    } else {
+      hintEl.textContent = '시작을 누르면 60초 동안 안내합니다.';
+    }
+
+    if (breath.state === 'running') breathBtn.textContent = '일시정지';
+    else if (breath.state === 'paused') breathBtn.textContent = '이어서';
+    else if (breath.state === 'done') breathBtn.textContent = '다시 시작';
+    else breathBtn.textContent = '시작';
+  }
+
+  function step(now) {
+    if (breath.state !== 'running') return;
+    var dt = (now - breath.last) / 1000;
+    if (dt < 0) dt = 0;
+    if (dt > 0.1) dt = 0.1;
+    breath.last = now;
+    breath.elapsed += dt;
+
+    if (breath.elapsed >= TOTAL) {
+      breath.elapsed = TOTAL;
+      breath.state = 'done';
+      paintBreath();
+      return;
+    }
+    paintBreath();
+    breath.raf = window.requestAnimationFrame(step);
+  }
+
+  breathBtn.addEventListener('click', function () {
+    if (breath.state === 'running') {
+      breath.state = 'paused';
+      window.cancelAnimationFrame(breath.raf);
+      paintBreath();
+      return;
+    }
+    if (breath.state === 'done' || breath.elapsed >= TOTAL) {
+      breath.elapsed = 0;
+    }
+    breath.state = 'running';
+    breath.last = window.performance.now();
+    paintBreath();
+    breath.raf = window.requestAnimationFrame(step);
+  });
+
+  resetBtn.addEventListener('click', function () {
+    window.cancelAnimationFrame(breath.raf);
+    breath.elapsed = 0;
+    breath.state = 'idle';
+    paintBreath();
+  });
+
+  paintBreath();
+
+  /* ─────────────────────────────────────────
+     기록
+     ───────────────────────────────────────── */
+  var moodWrap = document.getElementById('moods');
+  var noteForm = document.getElementById('noteForm');
+  var noteInput = document.getElementById('noteInput');
+  var paneNotes = document.getElementById('paneNotes');
+  var paneSaved = document.getElementById('paneSaved');
+  var noteCount = document.getElementById('noteCount');
+  var savedCount = document.getElementById('savedCount');
+
+  var activeMood = null;
+
+  MOODS.forEach(function (name) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mood';
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-checked', 'false');
+    btn.textContent = name;
+    btn.addEventListener('click', function () {
+      activeMood = activeMood === name ? null : name;
+      var all = moodWrap.querySelectorAll('.mood');
+      for (var i = 0; i < all.length; i++) {
+        all[i].setAttribute('aria-checked', all[i].textContent === activeMood ? 'true' : 'false');
+      }
+    });
+    moodWrap.appendChild(btn);
+  });
+
+  noteForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var text = noteInput.value.trim();
+    if (!text) {
+      noteInput.focus();
+      return;
+    }
+    notes.unshift({ id: uid(), text: text, mood: activeMood, at: new Date().toISOString() });
+    writeStore(KEY_NOTES, notes);
+
+    noteInput.value = '';
+    activeMood = null;
+    var all = moodWrap.querySelectorAll('.mood');
+    for (var i = 0; i < all.length; i++) all[i].setAttribute('aria-checked', 'false');
+
+    renderNotes();
+    switchPane('notes');
+  });
+
+  function renderNotes() {
+    noteCount.textContent = String(notes.length);
+    paneNotes.textContent = '';
+
+    if (!notes.length) {
+      var empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = '아직 남긴 기록이 없습니다. 한 줄이면 충분합니다.';
+      paneNotes.appendChild(empty);
+      return;
+    }
+
+    notes.forEach(function (note) {
+      var item = document.createElement('div');
+      item.className = 'note-item';
+
+      var body = document.createElement('div');
+      body.className = 'note-body';
+
+      var meta = document.createElement('div');
+      meta.className = 'note-meta';
+
+      if (note.mood) {
+        var moodTag = document.createElement('span');
+        moodTag.className = 'note-mood';
+        moodTag.textContent = note.mood;
+        meta.appendChild(moodTag);
+      }
+
+      var when = document.createElement('span');
+      when.textContent = stampLabel(note.at);
+      meta.appendChild(when);
+      body.appendChild(meta);
+
+      var p = document.createElement('p');
+      p.className = 'note-text';
+      p.textContent = note.text;
+      body.appendChild(p);
+
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'icon-btn';
+      del.setAttribute('aria-label', '이 기록 지우기');
+      del.textContent = '×';
+      del.addEventListener('click', function () {
+        if (!window.confirm('이 기록을 지울까요?')) return;
+        notes = notes.filter(function (n) { return n.id !== note.id; });
+        writeStore(KEY_NOTES, notes);
+        renderNotes();
+      });
+
+      item.appendChild(body);
+      item.appendChild(del);
+      paneNotes.appendChild(item);
+    });
+  }
+
+  function renderSaved() {
+    savedCount.textContent = String(saved.length);
+    paneSaved.textContent = '';
+
+    if (!saved.length) {
+      var empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = '아직 담은 문장이 없습니다. 오늘 화면에서 「담기」를 누르면 여기 모입니다.';
+      paneSaved.appendChild(empty);
+      return;
+    }
+
+    saved.forEach(function (entry) {
+      var quote = findQuote(entry.id);
+      if (!quote) return;
+
+      var box = document.createElement('div');
+      box.className = 'saved-item';
+
+      var p = document.createElement('p');
+      p.className = 'q';
+      p.textContent = quote.text;
+
+      var by = document.createElement('div');
+      by.className = 'saved-by';
+
+      var who = document.createElement('span');
+      who.className = 'who';
+      who.textContent = quote.author;
+
+      var remove = document.createElement('button');
+      remove.type = 'button';
+      remove.setAttribute('aria-label', '이 문장 빼기');
+      remove.textContent = '빼기';
+      remove.addEventListener('click', function () {
+        saved = saved.filter(function (s) { return s.id !== quote.id; });
+        writeStore(KEY_SAVED, saved);
+        renderSaved();
+        renderQuote();
+      });
+
+      by.appendChild(who);
+      by.appendChild(remove);
+      box.appendChild(p);
+      box.appendChild(by);
+      paneSaved.appendChild(box);
+    });
+  }
+
+  var segs = [document.getElementById('segNotes'), document.getElementById('segSaved')];
+
+  function switchPane(name) {
+    paneNotes.classList.toggle('is-active', name === 'notes');
+    paneSaved.classList.toggle('is-active', name === 'saved');
+    segs.forEach(function (seg) {
+      var on = seg.getAttribute('data-pane') === name;
+      seg.classList.toggle('is-active', on);
+      seg.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+  }
+
+  segs.forEach(function (seg) {
+    seg.addEventListener('click', function () {
+      switchPane(seg.getAttribute('data-pane'));
+    });
+  });
+
+  renderNotes();
+  renderSaved();
+  renderQuote();
+})();
+</script>
+</body>
+</html>
